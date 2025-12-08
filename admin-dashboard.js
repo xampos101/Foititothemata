@@ -20,6 +20,11 @@ const saveGitHubConfig = document.getElementById('saveGitHubConfig');
 const githubTokenInput = document.getElementById('githubToken');
 const githubRepoInput = document.getElementById('githubRepo');
 const githubSetupSection = document.getElementById('githubSetupSection');
+const githubConfigStatusSection = document.getElementById('githubConfigStatusSection');
+const resetGitHubConfig = document.getElementById('resetGitHubConfig');
+const currentRepo = document.getElementById('currentRepo');
+const currentTokenMask = document.getElementById('currentTokenMask');
+const resetConfigStatus = document.getElementById('resetConfigStatus');
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -80,14 +85,51 @@ function loadGitHubConfig() {
     githubRepo = localStorage.getItem('githubRepo');
     
     if (githubToken && githubRepo) {
-        // Hide setup section if already configured
+        // Hide setup section, show status section
         githubSetupSection.style.display = 'none';
+        githubConfigStatusSection.style.display = 'block';
         githubTokenInput.value = '••••••••••••' + githubToken.slice(-4);
         githubRepoInput.value = githubRepo;
+        
+        // Update status section
+        currentRepo.textContent = githubRepo;
+        currentTokenMask.textContent = '••••••••••••' + githubToken.slice(-4);
     } else {
+        // Show setup section, hide status section
         githubSetupSection.style.display = 'block';
+        githubConfigStatusSection.style.display = 'none';
     }
 }
+
+// Reset GitHub Config
+resetGitHubConfig.addEventListener('click', () => {
+    if (!confirm('Είστε σίγουροι ότι θέλετε να διαγράψετε το GitHub config; Θα χρειαστεί να το ρυθμίσετε ξανά.')) {
+        return;
+    }
+    
+    // Delete from localStorage
+    localStorage.removeItem('githubToken');
+    localStorage.removeItem('githubRepo');
+    
+    // Clear variables
+    githubToken = null;
+    githubRepo = null;
+    
+    // Clear inputs
+    githubTokenInput.value = '';
+    githubRepoInput.value = '';
+    
+    // Show setup section, hide status section
+    githubSetupSection.style.display = 'block';
+    githubConfigStatusSection.style.display = 'none';
+    
+    // Show success message
+    resetConfigStatus.innerHTML = '<div class="success-message">✅ Config διαγράφηκε! Συμπληρώστε τα πεδία παραπάνω για νέο setup.</div>';
+    
+    setTimeout(() => {
+        resetConfigStatus.innerHTML = '';
+    }, 3000);
+});
 
 // Save GitHub Config
 saveGitHubConfig.addEventListener('click', () => {
@@ -117,6 +159,11 @@ saveGitHubConfig.addEventListener('click', () => {
     
     showConfigStatus('✅ Config αποθηκεύτηκε! Τώρα οι αλλαγές γίνονται απευθείας στο GitHub.', 'success');
     githubSetupSection.style.display = 'none';
+    githubConfigStatusSection.style.display = 'block';
+    
+    // Update status section
+    currentRepo.textContent = githubRepo;
+    currentTokenMask.textContent = '••••••••••••' + githubToken.slice(-4);
     
     setTimeout(() => {
         updateConfigStatus();

@@ -41,6 +41,17 @@
             <div id="githubConfigStatus" style="margin-top: 1rem;"></div>
         </section>
 
+        <!-- GitHub Config Status Section (Όταν είναι configured) -->
+        <section class="admin-section" id="githubConfigStatusSection" style="display: none;">
+            <h2>⚙️ GitHub Configuration</h2>
+            <div id="githubConfigInfo" style="color: var(--text-secondary); margin-bottom: 1rem;">
+                <p><strong>Repository:</strong> <span id="currentRepo"></span></p>
+                <p><strong>Token:</strong> <span id="currentTokenMask"></span></p>
+            </div>
+            <button id="resetGitHubConfig" class="btn-secondary">🔄 Reset Config</button>
+            <div id="resetConfigStatus" style="margin-top: 1rem;"></div>
+        </section>
+
         <!-- Add Exam Section -->
         <section class="admin-section">
             <h2>➕ Προσθήκη Νέου Θέματος</h2>
