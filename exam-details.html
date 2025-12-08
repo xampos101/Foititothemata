@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Εξεταστικές - Φοιτητικά Θέματα</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h1 id="courseTitle">📚 Μάθημα</h1>
+                    <p class="subtitle">Εξεταστικές ανά έτος</p>
+                </div>
+                <div style="display: flex; gap: 1rem; align-items: center;">
+                    <a href="index.html" class="admin-link" style="margin-left: 0;">← Αρχική Σελίδα</a>
+                    <a href="admin-login.html" class="admin-link">⚙️ Admin</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container">
+        <div id="loading" class="loading">⏳ Φόρτωση...</div>
+        <div id="error" class="error" style="display: none;"></div>
+        
+        <!-- Exams by Year -->
+        <div id="examsByYear"></div>
+        
+        <div id="noResults" class="no-results" style="display: none;">
+            <p>😔 Δεν βρέθηκαν εξεταστικές για αυτό το μάθημα.</p>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>Made with ❤️ for students of Computer Science Department, Kavala</p>
+        </div>
+    </footer>
+
+    <script src="exam-details.js"></script>
+</body>
+</html>
+
