@@ -44,16 +44,6 @@
       "type": "Εξεταστική Ιουνίου",
       "description": "Sorting, searching, graph algorithms",
       "file": null
-    },
-    {
-      "id": 6,
-      "course": "Web Development",
-      "semester": 5,
-      "year": 2023,
-      "type": "Εξεταστική Ιανουαρίου",
-      "description": "HTML, CSS, JavaScript, React",
-      "file": null
     }
   ]
 }
-
