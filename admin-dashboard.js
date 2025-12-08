@@ -1,9 +1,11 @@
 // Admin Dashboard JavaScript για GitHub Pages
-// File upload με base64 encoding (χωρίς GitHub API)
+// Αυτόματες αλλαγές στο GitHub με API (χωρίς manual download/upload)
 
 // Global Variables
 let allExams = [];
 let currentEditId = null;
+let githubToken = null;
+let githubRepo = null;
 
 // DOM Elements
 const addExamForm = document.getElementById('addExamForm');
@@ -14,7 +16,10 @@ const editModal = document.getElementById('editModal');
 const closeModal = document.querySelector('.close-modal');
 const cancelEdit = document.getElementById('cancelEdit');
 const submitBtn = document.getElementById('submitBtn');
-const exportJsonBtn = document.getElementById('exportJsonBtn');
+const saveGitHubConfig = document.getElementById('saveGitHubConfig');
+const githubTokenInput = document.getElementById('githubToken');
+const githubRepoInput = document.getElementById('githubRepo');
+const githubSetupSection = document.getElementById('githubSetupSection');
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -24,12 +29,13 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
     
+    loadGitHubConfig();
     loadExams();
     setupEventListeners();
     updateAdminStatus();
 });
 
-// Check Auth: Ελέγχει αν ο χρήστης είναι logged in
+// Check Auth
 function checkAuth() {
     const loggedIn = localStorage.getItem('adminLoggedIn');
     const loginTime = localStorage.getItem('adminLoginTime');
@@ -38,7 +44,6 @@ function checkAuth() {
         return false;
     }
     
-    // Check if session expired (24 hours)
     if (loginTime) {
         const timeDiff = Date.now() - parseInt(loginTime);
         const hoursDiff = timeDiff / (1000 * 60 * 60);
@@ -69,29 +74,72 @@ function logout() {
     window.location.href = 'admin-login.html';
 }
 
-// Load Exams: Φορτώνει τα θέματα από το JSON ή localStorage
+// Load GitHub Config
+function loadGitHubConfig() {
+    githubToken = localStorage.getItem('githubToken');
+    githubRepo = localStorage.getItem('githubRepo');
+    
+    if (githubToken && githubRepo) {
+        // Hide setup section if already configured
+        githubSetupSection.style.display = 'none';
+        githubTokenInput.value = '••••••••••••' + githubToken.slice(-4);
+        githubRepoInput.value = githubRepo;
+    } else {
+        githubSetupSection.style.display = 'block';
+    }
+}
+
+// Save GitHub Config
+saveGitHubConfig.addEventListener('click', () => {
+    const token = githubTokenInput.value.trim();
+    const repo = githubRepoInput.value.trim();
+    
+    if (!token || !repo) {
+        showConfigStatus('⚠️ Παρακαλώ συμπληρώστε όλα τα πεδία', 'error');
+        return;
+    }
+    
+    // Αν το token είναι masked (••••), δεν το αλλάζουμε
+    if (!token.startsWith('ghp_') && !token.startsWith('github_pat_')) {
+        if (githubToken) {
+            // Κρατάμε το παλιό token
+        } else {
+            showConfigStatus('⚠️ Παρακαλώ εισάγετε valid GitHub token', 'error');
+            return;
+        }
+    } else {
+        localStorage.setItem('githubToken', token);
+        githubToken = token;
+    }
+    
+    localStorage.setItem('githubRepo', repo);
+    githubRepo = repo;
+    
+    showConfigStatus('✅ Config αποθηκεύτηκε! Τώρα οι αλλαγές γίνονται απευθείας στο GitHub.', 'success');
+    githubSetupSection.style.display = 'none';
+    
+    setTimeout(() => {
+        updateConfigStatus();
+    }, 3000);
+});
+
+function showConfigStatus(message, type) {
+    const statusDiv = document.getElementById('githubConfigStatus');
+    const className = type === 'success' ? 'success-message' : 'error-message';
+    statusDiv.innerHTML = `<div class="${className}">${message}</div>`;
+}
+
+function updateConfigStatus() {
+    const statusDiv = document.getElementById('githubConfigStatus');
+    if (githubToken && githubRepo) {
+        statusDiv.innerHTML = '<div class="success-message">✅ GitHub config είναι έτοιμο! Οι αλλαγές γίνονται απευθείας.</div>';
+    }
+}
+
+// Load Exams
 async function loadExams() {
     try {
         loading.style.display = 'block';
-        
-        // Προσπαθεί να φορτώσει από localStorage πρώτα (για unsaved changes)
-        const localExams = localStorage.getItem('localExams');
-        if (localExams) {
-            try {
-                const parsed = JSON.parse(localExams);
-                if (Array.isArray(parsed) && parsed.length > 0) {
-                    allExams = parsed;
-                    displayExams();
-                    loading.style.display = 'none';
-                    return;
-                }
-            } catch (e) {
-                // Αν το localStorage είναι corrupted, συνεχίζει με το JSON
-                console.warn('LocalStorage data corrupted, loading from JSON');
-            }
-        }
-        
-        // Φορτώνει από το JSON file
         const response = await fetch('data/exams.json');
         const data = await response.json();
         allExams = data.exams || [];
@@ -104,7 +152,7 @@ async function loadExams() {
     }
 }
 
-// Display Exams: Εμφανίζει τα θέματα
+// Display Exams
 function displayExams() {
     if (allExams.length === 0) {
         examsList.innerHTML = '<p>Δεν υπάρχουν θέματα. Προσθέστε ένα νέο θέμα παραπάνω.</p>';
@@ -145,10 +193,9 @@ function setupEventListeners() {
     editModal.addEventListener('click', (e) => {
         if (e.target === editModal) closeEditModal();
     });
-    exportJsonBtn.addEventListener('click', exportJson);
 }
 
-// Handle Add Exam: Προσθήκη νέου θέματος
+// Handle Add Exam
 async function handleAddExam(e) {
     e.preventDefault();
     
@@ -178,7 +225,7 @@ async function handleAddExam(e) {
         // Αν έχει επιλεγεί αρχείο, το μετατρέπει σε base64/data URL
         if (fileInput.files[0]) {
             const file = fileInput.files[0];
-            const maxSize = file.type === 'image/png' || file.type === 'image/jpeg' ? 5 * 1024 * 1024 : 10 * 1024 * 1024; // 5MB για images, 10MB για PDF
+            const maxSize = file.type === 'image/png' || file.type === 'image/jpeg' ? 5 * 1024 * 1024 : 10 * 1024 * 1024;
             
             if (file.size > maxSize) {
                 showFormError(`Το αρχείο είναι πολύ μεγάλο (${(file.size / 1024 / 1024).toFixed(2)}MB). Μέγιστο: ${(maxSize / 1024 / 1024).toFixed(0)}MB`);
@@ -205,10 +252,15 @@ async function handleAddExam(e) {
         
         allExams.push(newExam);
         
-        // Αποθήκευση στο localStorage
-        saveToLocalStorage();
+        // Αν υπάρχει GitHub config, κάνει automatic commit
+        if (githubToken && githubRepo) {
+            submitBtn.textContent = '⏳ Αποθήκευση στο GitHub...';
+            await updateExamsJson();
+            formSuccess.textContent = '✅ Θέμα προστέθηκε επιτυχώς και αποθηκεύτηκε στο GitHub!';
+        } else {
+            formSuccess.textContent = '✅ Θέμα προστέθηκε! (Τοπικά - ρυθμίστε GitHub για automatic save)';
+        }
         
-        formSuccess.textContent = '✅ Θέμα προστέθηκε επιτυχώς! Κατεβάστε το JSON για να το ανεβάσετε στο GitHub.';
         formSuccess.style.display = 'block';
         addExamForm.reset();
         await loadExams();
@@ -226,55 +278,58 @@ async function handleAddExam(e) {
     }
 }
 
-// File to Data URL: Μετατρέπει αρχείο σε data URL (base64)
+// File to Data URL
 function fileToDataUrl(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
-        
-        reader.onload = () => {
-            // Data URL format: data:image/png;base64,xxxxx
-            resolve(reader.result);
-        };
-        
+        reader.onload = () => resolve(reader.result);
         reader.onerror = () => reject(new Error('Σφάλμα ανάγνωσης αρχείου'));
         reader.readAsDataURL(file);
     });
 }
 
-// Save to LocalStorage: Αποθηκεύει τα exams στο localStorage
-function saveToLocalStorage() {
-    localStorage.setItem('localExams', JSON.stringify(allExams));
-}
-
-// Export JSON: Κατεβάζει το JSON file
-function exportJson() {
+// Update Exams JSON on GitHub
+async function updateExamsJson() {
+    // 1. Get current file SHA (για update)
+    const getResponse = await fetch(`https://api.github.com/repos/${githubRepo}/contents/data/exams.json`, {
+        headers: {
+            'Authorization': `token ${githubToken}`,
+            'Accept': 'application/vnd.github.v3+json'
+        }
+    });
+    
+    let sha = null;
+    if (getResponse.ok) {
+        const fileData = await getResponse.json();
+        sha = fileData.sha;
+    }
+    
+    // 2. Update file
     const jsonContent = JSON.stringify({ exams: allExams }, null, 2);
-    const blob = new Blob([jsonContent], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'exams.json';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const base64Content = btoa(unescape(encodeURIComponent(jsonContent)));
     
-    // Εμφανίζει success message
-    const successMsg = document.createElement('div');
-    successMsg.className = 'success-message';
-    successMsg.textContent = '✅ JSON file κατέβηκε! Ανέβασε το στο GitHub repository.';
-    successMsg.style.position = 'fixed';
-    successMsg.style.top = '20px';
-    successMsg.style.right = '20px';
-    successMsg.style.zIndex = '10000';
-    document.body.appendChild(successMsg);
+    const response = await fetch(`https://api.github.com/repos/${githubRepo}/contents/data/exams.json`, {
+        method: 'PUT',
+        headers: {
+            'Authorization': `token ${githubToken}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/vnd.github.v3+json'
+        },
+        body: JSON.stringify({
+            message: 'Update exams.json via Admin Panel',
+            content: base64Content,
+            branch: 'main',
+            sha: sha
+        })
+    });
     
-    setTimeout(() => {
-        document.body.removeChild(successMsg);
-    }, 3000);
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Σφάλμα ενημέρωσης exams.json');
+    }
 }
 
-// Edit Exam: Ανοίγει modal για επεξεργασία
+// Edit Exam
 function editExam(id) {
     const exam = allExams.find(e => e.id === id);
     if (!exam) return;
@@ -294,7 +349,7 @@ function editExam(id) {
     editModal.style.display = 'flex';
 }
 
-// Handle Edit Exam: Ενημέρωση θέματος
+// Handle Edit Exam
 async function handleEditExam(e) {
     e.preventDefault();
     
@@ -336,10 +391,14 @@ async function handleEditExam(e) {
         allExams[examIndex].description = description;
         allExams[examIndex].updatedAt = new Date().toISOString();
         
-        // Αποθήκευση
-        saveToLocalStorage();
+        // Αν υπάρχει GitHub config, κάνει automatic commit
+        if (githubToken && githubRepo) {
+            await updateExamsJson();
+            formSuccess.textContent = '✅ Θέμα ενημερώθηκε επιτυχώς και αποθηκεύτηκε στο GitHub!';
+        } else {
+            formSuccess.textContent = '✅ Θέμα ενημερώθηκε! (Τοπικά - ρυθμίστε GitHub για automatic save)';
+        }
         
-        formSuccess.textContent = '✅ Θέμα ενημερώθηκε επιτυχώς! Κατεβάστε το JSON για να το ανεβάσετε στο GitHub.';
         formSuccess.style.display = 'block';
         await loadExams();
         
@@ -353,8 +412,8 @@ async function handleEditExam(e) {
     }
 }
 
-// Delete Exam: Διαγραφή θέματος
-function deleteExam(id) {
+// Delete Exam
+async function deleteExam(id) {
     if (!confirm('Είστε σίγουροι ότι θέλετε να διαγράψετε αυτό το θέμα;')) {
         return;
     }
@@ -363,22 +422,21 @@ function deleteExam(id) {
     if (examIndex === -1) return;
     
     allExams.splice(examIndex, 1);
-    saveToLocalStorage();
-    loadExams();
     
-    // Success message
-    const successMsg = document.createElement('div');
-    successMsg.className = 'success-message';
-    successMsg.textContent = '✅ Θέμα διαγράφηκε! Κατεβάστε το JSON για να το ανεβάσετε στο GitHub.';
-    successMsg.style.position = 'fixed';
-    successMsg.style.top = '20px';
-    successMsg.style.right = '20px';
-    successMsg.style.zIndex = '10000';
-    document.body.appendChild(successMsg);
+    // Αν υπάρχει GitHub config, κάνει automatic commit
+    if (githubToken && githubRepo) {
+        try {
+            await updateExamsJson();
+            alert('✅ Θέμα διαγράφηκε επιτυχώς και αποθηκεύτηκε στο GitHub!');
+        } catch (error) {
+            alert('Σφάλμα κατά τη διαγραφή: ' + error.message);
+            return;
+        }
+    } else {
+        alert('✅ Θέμα διαγράφηκε! (Τοπικά - ρυθμίστε GitHub για automatic save)');
+    }
     
-    setTimeout(() => {
-        document.body.removeChild(successMsg);
-    }, 3000);
+    await loadExams();
 }
 
 // Close Edit Modal
@@ -408,7 +466,7 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// Global functions για onclick handlers
+// Global functions
 window.editExam = editExam;
 window.deleteExam = deleteExam;
 window.logout = logout;

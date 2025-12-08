@@ -20,15 +20,25 @@
     </header>
 
     <main class="container">
-        <!-- Info Section -->
-        <section class="admin-section">
-            <h2>ℹ️ Οδηγίες</h2>
-            <p style="color: var(--text-secondary); line-height: 1.8; margin-bottom: 1rem;">
-                Μπορείτε να προσθέτετε, επεξεργάζεστε και διαγράφετε θέματα. 
-                Οι αλλαγές αποθηκεύονται τοπικά. Μετά τις αλλαγές, κατεβάστε το ενημερωμένο JSON file 
-                και ανεβάστε το στο GitHub repository.
+        <!-- GitHub Setup Section (Μόνο πρώτη φορά) -->
+        <section class="admin-section" id="githubSetupSection">
+            <h2>🔧 GitHub Setup (Μόνο πρώτη φορά)</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                Για να γίνονται οι αλλαγές απευθείας στο GitHub, χρειάζεσαι Personal Access Token.
+                <a href="https://github.com/settings/tokens" target="_blank" style="color: var(--primary-color);">Δημιούργησε token εδώ</a>
             </p>
-            <button id="exportJsonBtn" class="btn-secondary" style="width: auto; margin-top: 0;">📥 Κατέβασμα JSON</button>
+            <div class="form-group">
+                <label for="githubToken">GitHub Personal Access Token:</label>
+                <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxx">
+                <small>Token με <code>repo</code> scope</small>
+            </div>
+            <div class="form-group">
+                <label for="githubRepo">Repository (username/repo):</label>
+                <input type="text" id="githubRepo" placeholder="username/repo-name">
+                <small>π.χ. xampo/foititothemata</small>
+            </div>
+            <button id="saveGitHubConfig" class="btn-primary">💾 Αποθήκευση Config</button>
+            <div id="githubConfigStatus" style="margin-top: 1rem;"></div>
         </section>
 
         <!-- Add Exam Section -->
