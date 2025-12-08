@@ -325,7 +325,18 @@ async function updateExamsJson() {
     
     if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || 'Σφάλμα ενημέρωσης exams.json');
+        let errorMessage = error.message || 'Σφάλμα ενημέρωσης exams.json';
+        
+        // Προσθήκη πιο descriptive error messages
+        if (response.status === 401) {
+            errorMessage = '401 Unauthorized: Το token είναι λάθος ή έχει λήξει. Δημιούργησε νέο token.';
+        } else if (response.status === 403) {
+            errorMessage = '403 Forbidden: Το token δεν έχει access. Έλεγξε ότι έχει "repo" scope.';
+        } else if (response.status === 404) {
+            errorMessage = '404 Not Found: Το repository path είναι λάθος. Format: username/repo-name';
+        }
+        
+        throw new Error(errorMessage);
     }
 }
 
