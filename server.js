@@ -52,7 +52,7 @@ const upload = multer({
 
 // Session Configuration: Ρυθμίσεις για sessions (για login)
 app.use(session({
-  secret: 'your-secret-key-change-this-in-production', // ΣΕ PRODUCTION ΑΛΛΑΞΕ ΑΥΤΟ!
+  secret: process.env.SESSION_SECRET || 'your-secret-key-change-this-in-production', // ΣΕ PRODUCTION ΑΛΛΑΞΕ ΑΥΤΟ!
   resave: false,
   saveUninitialized: false,
   cookie: { 
@@ -126,9 +126,7 @@ function requireAuth(req, res, next) {
 // GET /api/exams - Επιστρέφει όλα τα διαθέσιμα θέματα
 app.get('/api/exams', (req, res) => {
   try {
-    // Διαβάζει το JSON αρχείο με τα δεδομένα
-    const dataPath = path.join(__dirname, 'data', 'exams.json');
-    const data = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
+    const data = readExams();
     res.json(data);
   } catch (error) {
     console.error('Σφάλμα κατά την ανάγνωση δεδομένων:', error);
@@ -330,4 +328,3 @@ app.listen(PORT, () => {
   console.log(`🚀 Server τρέχει στο http://localhost:${PORT}`);
   console.log(`📚 Ιστοσελίδα για Φοιτητικά Θέματα - Τμήμα Πληροφορικής Καβάλας`);
 });
-

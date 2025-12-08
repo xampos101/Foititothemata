@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Φοιτητικά Θέματα</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="admin-styles.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>⚙️ Admin Dashboard</h1>
+            <div class="admin-header-actions">
+                <span id="adminStatus">Public Access</span>
+                <a href="index.html" class="btn-secondary">← Αρχική Σελίδα</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- GitHub Setup Section -->
+        <section class="admin-section">
+            <h2>🔧 GitHub Setup (Μόνο πρώτη φορά)</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                Για να μπορείς να ανεβάζεις αρχεία, χρειάζεσαι GitHub Personal Access Token.
+            </p>
+            <div class="form-group">
+                <label for="githubToken">GitHub Personal Access Token:</label>
+                <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxx">
+                <small>Δημιούργησε token στο: GitHub → Settings → Developer settings → Personal access tokens</small>
+            </div>
+            <div class="form-group">
+                <label for="githubRepo">Repository (username/repo):</label>
+                <input type="text" id="githubRepo" placeholder="username/repo-name">
+                <small>π.χ. xampo/foititothemata</small>
+            </div>
+            <button id="saveGitHubConfig" class="btn-primary">💾 Αποθήκευση Config</button>
+            <div id="githubConfigStatus" style="margin-top: 1rem;"></div>
+        </section>
+
+        <!-- Add Exam Section -->
+        <section class="admin-section">
+            <h2>➕ Προσθήκη Νέου Θέματος</h2>
+            <form id="addExamForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="course">Μάθημα *:</label>
+                        <input type="text" id="course" name="course" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="semester">Εξάμηνο *:</label>
+                        <select id="semester" name="semester" required>
+                            <option value="">Επιλέξτε...</option>
+                            <option value="1">1ο</option>
+                            <option value="2">2ο</option>
+                            <option value="3">3ο</option>
+                            <option value="4">4ο</option>
+                            <option value="5">5ο</option>
+                            <option value="6">6ο</option>
+                            <option value="7">7ο</option>
+                            <option value="8">8ο</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="year">Έτος *:</label>
+                        <input type="number" id="year" name="year" min="2000" max="2100" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="type">Τύπος Εξεταστικής:</label>
+                        <input type="text" id="type" name="type" placeholder="π.χ. Εξεταστική Ιανουαρίου">
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <label for="description">Περιγραφή:</label>
+                        <textarea id="description" name="description" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <label for="file">Αρχείο (PDF ή PNG) *:</label>
+                        <input type="file" id="file" name="file" accept=".pdf,.png,.jpg,.jpeg" required>
+                        <small>Μέγιστο μέγεθος: 25MB (GitHub limit)</small>
+                    </div>
+                </div>
+                
+                <div id="formError" class="error-message" style="display: none;"></div>
+                <div id="formSuccess" class="success-message" style="display: none;"></div>
+                
+                <button type="submit" class="btn-primary" id="submitBtn">💾 Προσθήκη Θέματος</button>
+            </form>
+        </section>
+
+        <!-- Existing Exams Section -->
+        <section class="admin-section">
+            <h2>📋 Υφιστάμενα Θέματα</h2>
+            <div id="loading" class="loading">⏳ Φόρτωση...</div>
+            <div id="examsList" class="exams-list"></div>
+        </section>
+    </main>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>✏️ Επεξεργασία Θέματος</h2>
+            <form id="editExamForm">
+                <input type="hidden" id="editId" name="id">
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="editCourse">Μάθημα *:</label>
+                        <input type="text" id="editCourse" name="course" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editSemester">Εξάμηνο *:</label>
+                        <select id="editSemester" name="semester" required>
+                            <option value="1">1ο</option>
+                            <option value="2">2ο</option>
+                            <option value="3">3ο</option>
+                            <option value="4">4ο</option>
+                            <option value="5">5ο</option>
+                            <option value="6">6ο</option>
+                            <option value="7">7ο</option>
+                            <option value="8">8ο</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editYear">Έτος *:</label>
+                        <input type="number" id="editYear" name="year" min="2000" max="2100" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editType">Τύπος Εξεταστικής:</label>
+                        <input type="text" id="editType" name="type">
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <label for="editDescription">Περιγραφή:</label>
+                        <textarea id="editDescription" name="description" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <label for="editFile">Νέο Αρχείο (PDF ή PNG):</label>
+                        <input type="file" id="editFile" name="file" accept=".pdf,.png,.jpg,.jpeg">
+                        <small>Αφήστε κενό για να διατηρηθεί το υπάρχον αρχείο</small>
+                    </div>
+                </div>
+                
+                <div id="editFormError" class="error-message" style="display: none;"></div>
+                <div id="editFormSuccess" class="success-message" style="display: none;"></div>
+                
+                <button type="submit" class="btn-primary">💾 Αποθήκευση Αλλαγών</button>
+                <button type="button" class="btn-secondary" id="cancelEdit">Ακύρωση</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="admin-dashboard.js"></script>
+</body>
+</html>
+
