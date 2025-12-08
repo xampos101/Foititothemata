@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Φοιτητικά Θέματα - Τμήμα Πληροφορικής Καβάλας</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header: Κεφαλίδα της σελίδας -->
+    <header>
+        <div class="container">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h1>📚 Φοιτητικά Θέματα</h1>
+                    <p class="subtitle">Τμήμα Πληροφορικής - Καβάλα</p>
+                </div>
+                <a href="/admin-login.html" style="color: #667eea; text-decoration: none; font-weight: 600;">⚙️ Admin</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content: Κύριο περιεχόμενο -->
+    <main class="container">
+        <div class="main-grid">
+            <!-- Filters Section: Ενότητα φίλτρων για αναζήτηση -->
+            <section class="filters">
+                <h2>🔍 Αναζήτηση & Φίλτρα</h2>
+                <div class="filter-group">
+                    <label for="courseFilter">Μάθημα:</label>
+                    <input type="text" id="courseFilter" placeholder="π.χ. Προγραμματισμός">
+                </div>
+                <div class="filter-group">
+                    <label for="semesterFilter">Εξάμηνο:</label>
+                    <select id="semesterFilter">
+                        <option value="">Όλα</option>
+                        <option value="1">1ο</option>
+                        <option value="2">2ο</option>
+                        <option value="3">3ο</option>
+                        <option value="4">4ο</option>
+                        <option value="5">5ο</option>
+                        <option value="6">6ο</option>
+                        <option value="7">7ο</option>
+                        <option value="8">8ο</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="yearFilter">Έτος:</label>
+                    <select id="yearFilter">
+                        <option value="">Όλα</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <button id="clearFilters" class="btn-secondary">🗑️ Καθαρισμός</button>
+                </div>
+            </section>
+
+            <!-- Results Section: Ενότητα αποτελεσμάτων -->
+            <section class="results">
+                <div id="loading" class="loading">⏳ Φόρτωση δεδομένων...</div>
+                <div id="error" class="error" style="display: none;"></div>
+                <div id="examsContainer" class="exams-grid"></div>
+                <div id="noResults" class="no-results" style="display: none;">
+                    <p>😔 Δεν βρέθηκαν θέματα με τα κριτήρια που επιλέξατε.</p>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer: Υποσέλιδο -->
+    <footer>
+        <div class="container">
+            <p>Made with ❤️ for students of Computer Science Department, Kavala</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript: Το script που κάνει τη σελίδα interactive -->
+    <script src="app.js"></script>
+</body>
+</html>
+

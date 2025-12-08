@@ -1,0 +1,59 @@
+{
+  "exams": [
+    {
+      "id": 1,
+      "course": "Προγραμματισμός Υπολογιστών",
+      "semester": 1,
+      "year": 2023,
+      "type": "Εξεταστική Ιανουαρίου",
+      "description": "Θέματα προγραμματισμού σε C++",
+      "file": null
+    },
+    {
+      "id": 2,
+      "course": "Δομές Δεδομένων",
+      "semester": 2,
+      "year": 2023,
+      "type": "Εξεταστική Ιουνίου",
+      "description": "Θέματα για stacks, queues, trees",
+      "file": null
+    },
+    {
+      "id": 3,
+      "course": "Βάσεις Δεδομένων",
+      "semester": 3,
+      "year": 2023,
+      "type": "Εξεταστική Σεπτεμβρίου",
+      "description": "SQL queries και σχεδιασμός βάσεων",
+      "file": null
+    },
+    {
+      "id": 4,
+      "course": "Προγραμματισμός Υπολογιστών",
+      "semester": 1,
+      "year": 2022,
+      "type": "Εξεταστική Ιανουαρίου",
+      "description": "Βασικές έννοιες προγραμματισμού",
+      "file": null
+    },
+    {
+      "id": 5,
+      "course": "Αλγόριθμοι",
+      "semester": 4,
+      "year": 2023,
+      "type": "Εξεταστική Ιουνίου",
+      "description": "Sorting, searching, graph algorithms",
+      "file": null
+    },
+    {
+      "id": 6,
+      "course": "Web Development",
+      "semester": 5,
+      "year": 2023,
+      "type": "Εξεταστική Ιανουαρίου",
+      "description": "HTML, CSS, JavaScript, React",
+      "file": null
+    }
+  ]
+}
+
