@@ -1,8 +1,9 @@
 // Static Version για GitHub Pages
-// Διαβάζει τα δεδομένα απευθείας από το JSON file (χωρίς backend API)
+// Εμφανίζει μόνο μαθήματα - κάθε μάθημα οδηγεί σε σελίδα με τις εξεταστικές του
 
 // Global Variables
 let allExams = [];
+let uniqueCourses = [];
 
 // DOM Elements
 const examsContainer = document.getElementById('examsContainer');
@@ -27,7 +28,6 @@ async function loadExams() {
         loading.style.display = 'block';
         errorDiv.style.display = 'none';
         
-        // Διαβάζει το JSON file απευθείας (για GitHub Pages)
         const response = await fetch('data/exams.json');
         
         if (!response.ok) {
@@ -37,7 +37,9 @@ async function loadExams() {
         const data = await response.json();
         allExams = data.exams || [];
         
-        displayExams(allExams);
+        // Ομαδοποιεί τα μαθήματα (unique courses)
+        groupCourses();
+        displayCourses();
         
     } catch (error) {
         console.error('Σφάλμα:', error);
@@ -47,9 +49,38 @@ async function loadExams() {
     }
 }
 
-// Display Exams: Εμφανίζει τα θέματα
-function displayExams(exams) {
-    if (exams.length === 0) {
+// Group Courses: Ομαδοποιεί τα μαθήματα (unique courses)
+function groupCourses() {
+    const courseMap = new Map();
+    
+    allExams.forEach(exam => {
+        if (!courseMap.has(exam.course)) {
+            courseMap.set(exam.course, {
+                course: exam.course,
+                semester: exam.semester,
+                examCount: 0,
+                years: new Set(),
+                latestYear: exam.year
+            });
+        }
+        
+        const courseData = courseMap.get(exam.course);
+        courseData.examCount++;
+        courseData.years.add(exam.year);
+        if (exam.year > courseData.latestYear) {
+            courseData.latestYear = exam.year;
+        }
+    });
+    
+    uniqueCourses = Array.from(courseMap.values()).map(course => ({
+        ...course,
+        years: Array.from(course.years).sort((a, b) => b - a)
+    }));
+}
+
+// Display Courses: Εμφανίζει τα μαθήματα ως cards
+function displayCourses() {
+    if (uniqueCourses.length === 0) {
         noResults.style.display = 'block';
         examsContainer.innerHTML = '';
         return;
@@ -57,75 +88,76 @@ function displayExams(exams) {
     
     noResults.style.display = 'none';
     
-    examsContainer.innerHTML = exams.map(exam => {
-        let fileDisplay = '';
-        if (exam.file) {
-            const fileExtension = exam.file.toLowerCase().split('.').pop();
-            if (fileExtension === 'png' || fileExtension === 'jpg' || fileExtension === 'jpeg') {
-                fileDisplay = `
-                    <div style="margin-top: 1rem;">
-                        <a href="${exam.file}" target="_blank" style="display: inline-block; margin-bottom: 0.5rem; color: #667eea; text-decoration: none; font-weight: 600;">📄 Προβολή Εικόνας</a>
-                        <div style="margin-top: 0.5rem;">
-                            <img src="${exam.file}" alt="Θέμα εξεταστικής" style="max-width: 100%; border-radius: 8px; border: 2px solid rgba(255, 255, 255, 0.1); cursor: pointer; transition: all 0.3s;" onclick="window.open('${exam.file}', '_blank')" onmouseover="this.style.borderColor='#667eea'; this.style.boxShadow='0 4px 20px rgba(102, 126, 234, 0.3)'" onmouseout="this.style.borderColor='rgba(255, 255, 255, 0.1)'; this.style.boxShadow='none'">
-                        </div>
-                    </div>
-                `;
-            } else {
-                fileDisplay = `
-                    <div style="margin-top: 1rem;">
-                        <a href="${exam.file}" target="_blank" style="display: inline-block; padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; transition: all 0.3s; box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 10px 40px rgba(102, 126, 234, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 20px rgba(102, 126, 234, 0.3)'">📄 Προβολή PDF</a>
-                    </div>
-                `;
-            }
-        }
+    // Φιλτράρει τα μαθήματα
+    let filtered = uniqueCourses;
+    
+    const courseFilterValue = courseFilter.value.toLowerCase().trim();
+    const semesterFilterValue = semesterFilter.value;
+    const yearFilterValue = yearFilter.value;
+    
+    if (courseFilterValue) {
+        filtered = filtered.filter(c => c.course.toLowerCase().includes(courseFilterValue));
+    }
+    
+    if (semesterFilterValue) {
+        filtered = filtered.filter(c => c.semester === parseInt(semesterFilterValue));
+    }
+    
+    if (yearFilterValue) {
+        filtered = filtered.filter(c => c.years.includes(parseInt(yearFilterValue)));
+    }
+    
+    if (filtered.length === 0) {
+        noResults.style.display = 'block';
+        examsContainer.innerHTML = '';
+        return;
+    }
+    
+    // Ταξινομεί ανά όνομα μαθήματος
+    filtered.sort((a, b) => a.course.localeCompare(b.course));
+    
+    examsContainer.innerHTML = filtered.map(course => {
+        // URL για τη σελίδα λεπτομερειών (με URL encoding για ελληνικά)
+        const courseUrl = `exam-details.html?course=${encodeURIComponent(course.course)}`;
         
         return `
-            <div class="exam-card">
-                <h3>${escapeHtml(exam.course)}</h3>
+            <div class="exam-card course-card" onclick="window.location.href='${courseUrl}'">
+                <h3>${escapeHtml(course.course)}</h3>
                 <div class="meta">
-                    <span>📅 ${exam.year}</span>
-                    <span>📚 ${exam.semester}ο Εξάμηνο</span>
-                    ${exam.type ? `<span>📝 ${escapeHtml(exam.type)}</span>` : ''}
+                    <span>📚 ${course.semester}ο Εξάμηνο</span>
+                    <span>📝 ${course.examCount} ${course.examCount === 1 ? 'Εξεταστική' : 'Εξεταστικές'}</span>
                 </div>
-                ${exam.description ? `<div class="description">${escapeHtml(exam.description)}</div>` : ''}
-                ${fileDisplay}
+                <div class="course-years">
+                    <strong>Έτη:</strong> ${course.years.join(', ')}
+                </div>
+                <div class="course-action">
+                    <span class="view-exams-btn">👁️ Προβολή Εξεταστικών →</span>
+                </div>
             </div>
         `;
     }).join('');
 }
 
-// Filter Exams
-function filterExams() {
-    const course = courseFilter.value.toLowerCase().trim();
-    const semester = semesterFilter.value;
-    const year = yearFilter.value;
-    
-    const filtered = allExams.filter(exam => {
-        const matchesCourse = !course || exam.course.toLowerCase().includes(course);
-        const matchesSemester = !semester || exam.semester === parseInt(semester);
-        const matchesYear = !year || exam.year === parseInt(year);
-        
-        return matchesCourse && matchesSemester && matchesYear;
-    });
-    
-    displayExams(filtered);
+// Filter Courses: Φιλτράρει τα μαθήματα
+function filterCourses() {
+    displayCourses();
 }
 
 // Setup Event Listeners
 function setupEventListeners() {
-    courseFilter.addEventListener('input', filterExams);
-    semesterFilter.addEventListener('change', filterExams);
-    yearFilter.addEventListener('change', filterExams);
+    courseFilter.addEventListener('input', filterCourses);
+    semesterFilter.addEventListener('change', filterCourses);
+    yearFilter.addEventListener('change', filterCourses);
     
     clearFiltersBtn.addEventListener('click', () => {
         courseFilter.value = '';
         semesterFilter.value = '';
         yearFilter.value = '';
-        filterExams();
+        filterCourses();
     });
 }
 
-// Populate Year Filter
+// Populate Year Filter: Γεμίζει το dropdown με τα διαθέσιμα έτη
 function populateYearFilter() {
     setTimeout(() => {
         if (allExams.length > 0) {
@@ -149,4 +181,3 @@ function escapeHtml(text) {
     div.textContent = text;
     return div.innerHTML;
 }
-
